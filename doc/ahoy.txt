@@ -1,0 +1,92 @@
+*ahoy.txt*  Context-aware startup dashboard
+
+==============================================================================
+CONTENTS                                                       *ahoy-contents*
+
+  1. Usage ............................................... |ahoy-usage|
+  2. Configuration ....................................... |ahoy-config|
+  3. Sections ............................................ |ahoy-sections|
+  4. Highlights .......................................... |ahoy-highlights|
+
+==============================================================================
+1. USAGE                                                          *ahoy-usage*
+
+                                                                       *:Ahoy*
+:Ahoy           Open the dashboard in the current window. If it is already
+                shown there, refresh it (re-detect context, refetch).
+
+The dashboard opens on startup when nvim is started without file arguments
+and with an empty buffer (see `show_on_startup`).
+
+Default keys in the dashboard:
+  <CR>   run the action of the row under the cursor
+  o      open the row in the browser
+  r      refresh
+  q      return to the previous buffer
+
+Context is detected once per open and decides the layout:
+  pr      current branch has an open PR (`gh pr view`)
+  main    in a git repo, otherwise
+  global  not in a git repo
+
+==============================================================================
+2. CONFIGURATION                                                 *ahoy-config*
+
+>lua
+  require("ahoy").setup({
+    show_on_startup = true,
+    keymap = "<leader>a",          -- open/refresh mapping, nil for none
+    idle = true,                   -- false disables the idle pool
+    sections = { ... },            -- see |ahoy-sections|
+    layouts = {
+      main = { header = "status", hero = { "next_meeting", "idle" },
+               cards = { "waiting", "my_prs" }, tickers = {} },
+    },
+    grid = { two_columns = 160, compact = 100, max_width = 220,
+             card_max_lines = 14, hero_max_lines = 10 },
+    keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
+  })
+<
+Layouts are merged per context; each slot you set replaces the default list.
+Slots: `header` (one section), `hero` (fallback list: the first section that
+is loading or has data wins), `tickers` (one-line strips), `cards` (grid,
+two-up when the window is at least `grid.two_columns` wide).
+
+==============================================================================
+3. SECTIONS                                                    *ahoy-sections*
+
+>lua
+  {
+    name   = "my_prs",
+    title  = "My PRs",                   -- optional, defaults to name
+    slots  = { "card", "ticker" },       -- optional, defaults to all
+    when   = function(ctx) return true end,
+    fetch  = function(ctx, done) done(data) end,
+    render = function(data, slot, width)
+      return { lines = lines, highlights = hls, keymaps = keymaps }
+    end,
+    empty   = "nothing here",            -- text for done(nil)
+    timeout = 30000,                     -- ms, false for none
+  }
+<
+`fetch` calls `done(data)` for data, `done(nil)` for "nothing", or
+`done(nil, err)` for an error. Errors thrown by fetch/render are shown in the
+card. `ctx` has: cwd, time, kind, root, branch, default_branch, git, pr.
+
+`render` returns:
+  lines       list of strings, or lists of `{ text, hl_group }` chunks
+  highlights  `{ row, col_start, col_end, group }` (1-based row, byte cols,
+              col_end -1 = end of line)
+  keymaps     `{ [row] = { ["<CR>"] = fn(ctx), o = fn(ctx) } }`
+
+Built-in: `status` (header).
+Set `sections = { status = false }` to remove a built-in.
+
+==============================================================================
+4. HIGHLIGHTS                                                *ahoy-highlights*
+
+All groups are default links: AhoyTitle, AhoyHeroTitle, AhoyBorder, AhoyDim,
+AhoyKey, AhoyOk, AhoyWarn, AhoyError, AhoyInfo, AhoyAccent, AhoyPath,
+AhoyBranch, AhoySpinner, AhoyTiming.
+
+ vim:tw=78:ts=8:ft=help:norl:

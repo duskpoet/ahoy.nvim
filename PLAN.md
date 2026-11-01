@@ -4,17 +4,17 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 `~/.config/nvim/lua/plugins.lua` via `{ dir = "~/ahoy.nvim", opts = {...} }`.
 
 ## Slice 1 — Core
-- [ ] Plugin layout: `lua/ahoy/{init,config,context,layout,render,section,util}.lua`, `plugin/ahoy.lua`, `doc/ahoy.txt`
-- [ ] `setup(opts)` + defaults (`show_on_startup`, `keymap`, `sections`, `layouts`, `idle`)
-- [ ] Startup: open only when `argc() == 0` and buffer is empty; `:Ahoy` command + hotkey (refresh if already open)
-- [ ] Scratch buffer (`buftype=nofile`, `filetype=ahoy`), `q` → previous buffer
-- [ ] Context detection (cwd, git root, branch, default branch, PR number via `gh pr view --json number`) → `pr` | `main` | `global`
-- [ ] Layout engine: `header` / `hero` (fallback list) / `card` grid (2 cols ≥160, 1 col <100) / `ticker`; reflow on `VimResized`
-- [ ] Async section runner (`vim.system`), per-section spinner, error state per card
-- [ ] Footer: keymap legend + per-source timings
-- [ ] Highlights linked to Nord-friendly defaults
-- [ ] `status` header section (path, branch, clean/dirty, ahead/behind, date/time)
-- [ ] Test with a fake `sleep` section
+- [x] Plugin layout: `lua/ahoy/{init,config,context,layout,render,section,util}.lua`, `plugin/ahoy.lua`, `doc/ahoy.txt`
+- [x] `setup(opts)` + defaults (`show_on_startup`, `keymap`, `sections`, `layouts`, `idle`)
+- [x] Startup: open only when `argc() == 0` and buffer is empty; `:Ahoy` command + hotkey (refresh if already open)
+- [x] Scratch buffer (`buftype=nofile`, `filetype=ahoy`), `q` → previous buffer
+- [x] Context detection (cwd, git root, branch, default branch, PR number via `gh pr view --json number`) → `pr` | `main` | `global`
+- [x] Layout engine: `header` / `hero` (fallback list) / `card` grid (2 cols ≥160, 1 col below; <100 shrinks margins) / `ticker`; reflow on `VimResized`
+- [x] Async section runner (`vim.system`), per-section spinner, error state per card
+- [x] Footer: keymap legend + per-source timings
+- [x] Highlights linked to Nord-friendly defaults
+- [x] `status` header section (path, branch, clean/dirty, ahead/behind, date/time)
+- [x] Test with a fake `sleep` section (`tests/run.lua`)
 
 ## Slice 2 — main view (GitHub)
 - [ ] `gh api graphql` wrapper (async, JSON decode, error surfacing)
