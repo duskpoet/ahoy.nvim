@@ -17,17 +17,19 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 - [x] Test with a fake `sleep` section (`tests/run.lua`)
 
 ## Slice 2 — main view (GitHub)
-- [ ] `gh api graphql` wrapper (async, JSON decode, error surfacing)
-- [ ] One query: my open PRs (checks, reviewDecision, mergeable, latest activity), review requests, mentions
-- [ ] Sections: `waiting` (review req · unresolved threads · mergeable · failing CI · mentions), `my_prs`, `latest`
-- [ ] Row actions: `<CR>` per row type, `o` browser (never merge / never write to remote)
+- [x] `gh api graphql` wrapper (async, JSON decode, error surfacing)
+- [x] One query: my open PRs (checks, reviewDecision, mergeable, latest activity), review requests, mentions — shared by all sections per refresh
+- [x] Sections: `waiting` (review req · unresolved threads · mergeable · failing CI · mentions), `my_prs`, `latest`
+- [x] Row actions: `<CR>` per row type, `o` browser (never merge / never write to remote)
+- [x] Review requests capped (`github.max_reviews`) + "+N older" row; bots hidden from `latest` (`github.hide_bots`)
+- [x] Fixture test with stubbed gh (`tests/github.lua`)
 
 ## Slice 3 — PR view
 - [ ] `pr` hero: CI x/y, per-reviewer state, mergeability, diffstat, timeline
 - [ ] `pr` hero "no PR yet" state (feature branch without open PR): push/create hints, diffstat vs base
 - [ ] `threads` card: unresolved review threads → `<CR>` jumps to file:line
 - [ ] `activity` card: comments, pushes, approvals, CI runs
-- [ ] Failing CI → `gh run view --log-failed` in a split
+- [ ] Failing CI → `gh run view --log-failed` in a split (`actions.log_failed` exists from slice 2; wire into `pr` hero)
 
 ## Slice 4 — Calendar (Google ICS)
 - [ ] Read URL from `~/.config/ahoy/ics_url`; warn if file perms aren't 600

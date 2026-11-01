@@ -49,7 +49,7 @@ local function finish(ctx, cb)
 end
 
 ---Gather context once per open. `cb(ctx)` with
----ctx = { cwd, time, kind = "pr"|"main"|"global", root?, branch?, default_branch?, git?, pr? }
+---ctx = { cwd, time, kind = "pr"|"main"|"global", root?, repo?, branch?, default_branch?, git?, pr? }
 function M.detect(cb)
   local ctx = { cwd = vim.fn.getcwd(), time = os.time(), kind = "global" }
   util.run({ "git", "rev-parse", "--show-toplevel" }, { cwd = ctx.cwd }, function(r)
@@ -58,7 +58,7 @@ function M.detect(cb)
     end
     ctx.root = vim.trim(r.stdout)
     local local_branches = {}
-    local pending = 3
+    local pending = 4
     local function step()
       pending = pending - 1
       if pending > 0 then
@@ -81,6 +81,12 @@ function M.detect(cb)
       end
       step()
     end)
+    util.run({ "git", "remote", "get-url", "origin" }, { cwd = ctx.root }, function(o)
+      if o.code == 0 then
+        ctx.repo = M._parse_remote(vim.trim(o.stdout))
+      end
+      step()
+    end)
     util.run(
       { "git", "branch", "--list", "main", "master", "--format=%(refname:short)" },
       { cwd = ctx.root },
@@ -95,5 +101,16 @@ function M.detect(cb)
 end
 
 M._parse_status = parse_status
+
+---"owner/name" from a GitHub remote URL (ssh, scp-like or https), else nil.
+function M._parse_remote(url)
+  local path = url:match("^[%w%-%.]+@[^:/]+:(.+)$") -- git@github.com:owner/name.git
+    or url:match("^%a[%w+.-]*://[^/]+/(.+)$") -- https://github.com/owner/name, ssh://git@host/owner/name
+  if not path then
+    return nil
+  end
+  path = path:gsub("%.git/?$", ""):gsub("/$", "")
+  return path:match("^[^/]+/[^/]+$") and path or nil
+end
 
 return M

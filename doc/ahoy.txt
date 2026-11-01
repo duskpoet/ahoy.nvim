@@ -45,6 +45,8 @@ Context is detected once per open and decides the layout:
     grid = { two_columns = 160, compact = 100, max_width = 220,
              card_max_lines = 14, hero_max_lines = 10 },
     keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
+    github = { limit = 30, mentions_days = 14, latest = 12,
+               max_reviews = 5, hide_bots = true },
   })
 <
 Layouts are merged per context; each slot you set replaces the default list.
@@ -79,8 +81,25 @@ card. `ctx` has: cwd, time, kind, root, branch, default_branch, git, pr.
               col_end -1 = end of line)
   keymaps     `{ [row] = { ["<CR>"] = fn(ctx), o = fn(ctx) } }`
 
-Built-in: `status` (header).
+Built-in sections:
+  status    header: path, branch, clean/dirty, ahead/behind, date/time
+  waiting   card/ticker: review requests, unresolved threads on my PRs,
+            failing CI, approved+mergeable PRs, @mentions
+  my_prs    card/ticker: my open PRs with CI x/y, review state, age
+  latest    card/ticker: recent activity by others on my PRs
 Set `sections = { status = false }` to remove a built-in.
+
+The GitHub sections share one `gh api graphql` request per refresh and need
+an authenticated `gh` CLI. Row actions (`<CR>`):
+  review request   `gh pr checkout` + `:Git difftool -y origin/<base>...`
+  threads, my PR   `gh pr checkout` + refresh (lands in the `pr` layout)
+  failing CI       `gh run view <id> --log-failed` in a split
+  merge, mention   open in the browser
+Checkout only happens for PRs in the current repo (else: browser), and asks
+first if the working tree is dirty. `o` always opens the row in the browser.
+ahoy never merges, pushes or comments.
+
+`ctx.repo` is "owner/name" parsed from the `origin` remote.
 
 ==============================================================================
 4. HIGHLIGHTS                                                *ahoy-highlights*

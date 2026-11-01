@@ -57,6 +57,59 @@ function M.fmt_ms(ms)
   return string.format("%.1fs", ms / 1000)
 end
 
+---Days since 1970-01-01 for a proleptic Gregorian date (Howard Hinnant's days_from_civil).
+local function days_from_civil(y, m, d)
+  y = m <= 2 and y - 1 or y
+  local era = math.floor(y / 400)
+  local yoe = y - era * 400
+  local mp = (m + 9) % 12
+  local doy = math.floor((153 * mp + 2) / 5) + d - 1
+  local doe = yoe * 365 + math.floor(yoe / 4) - math.floor(yoe / 100) + doy
+  return era * 146097 + doe - 719468
+end
+M.days_from_civil = days_from_civil
+
+---Parse an ISO-8601 UTC timestamp ("2026-10-31T13:14:23Z") to epoch seconds. nil if unparseable.
+function M.iso_to_epoch(s)
+  if type(s) ~= "string" then
+    return nil
+  end
+  local y, mo, d, h, mi, se = s:match("^(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
+  if not y then
+    return nil
+  end
+  local t = days_from_civil(tonumber(y), tonumber(mo), tonumber(d)) * 86400
+    + tonumber(h) * 3600 + tonumber(mi) * 60 + tonumber(se)
+  local sign, oh, om = s:match("([+-])(%d%d):?(%d%d)$")
+  if sign then
+    local off = (tonumber(oh) * 3600 + tonumber(om) * 60) * (sign == "+" and 1 or -1)
+    t = t - off
+  end
+  return t
+end
+
+---Compact relative age: "now", "5m", "3h", "2d", "3w", "4mo", "2y".
+function M.ago(epoch, now)
+  if not epoch then
+    return ""
+  end
+  local s = math.max(0, (now or os.time()) - epoch)
+  if s < 60 then
+    return "now"
+  elseif s < 3600 then
+    return math.floor(s / 60) .. "m"
+  elseif s < 86400 then
+    return math.floor(s / 3600) .. "h"
+  elseif s < 86400 * 14 then
+    return math.floor(s / 86400) .. "d"
+  elseif s < 86400 * 60 then
+    return math.floor(s / (86400 * 7)) .. "w"
+  elseif s < 86400 * 365 then
+    return math.floor(s / (86400 * 30)) .. "mo"
+  end
+  return math.floor(s / (86400 * 365)) .. "y"
+end
+
 function M.has(exe)
   return vim.fn.executable(exe) == 1
 end

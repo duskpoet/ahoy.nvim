@@ -1,7 +1,7 @@
 local M = {}
 
 ---Built-in sections (modules under `ahoy.sections`).
-M.builtin = { "status" }
+M.builtin = { "status", "waiting", "my_prs", "latest" }
 
 M.defaults = {
   show_on_startup = true,
@@ -24,6 +24,13 @@ M.defaults = {
     hero_max_lines = 10,
   },
   keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
+  github = {
+    limit = 30, -- max PRs per search
+    mentions_days = 14, -- only mentions in issues/PRs updated this recently
+    latest = 12, -- rows in the `latest` card
+    max_reviews = 5, -- review requests listed in `waiting`; older ones collapse into one row
+    hide_bots = true, -- drop bot authors (CI, linters, Linear…) from `latest`
+  },
 }
 
 local function valid_section(s)
@@ -41,7 +48,7 @@ function M.setup(opts)
       for kind, l in pairs(v) do
         cfg.layouts[kind] = l and vim.tbl_extend("force", cfg.layouts[kind] or {}, l) or nil
       end
-    elseif k == "grid" or k == "keys" then
+    elseif k == "grid" or k == "keys" or k == "github" then
       cfg[k] = vim.tbl_extend("force", cfg[k], v)
     elseif k ~= "sections" then
       cfg[k] = v
