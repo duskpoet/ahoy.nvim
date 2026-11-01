@@ -24,6 +24,7 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 
 ## Slice 3 — PR view
 - [ ] `pr` hero: CI x/y, per-reviewer state, mergeability, diffstat, timeline
+- [ ] `pr` hero "no PR yet" state (feature branch without open PR): push/create hints, diffstat vs base
 - [ ] `threads` card: unresolved review threads → `<CR>` jumps to file:line
 - [ ] `activity` card: comments, pushes, approvals, CI runs
 - [ ] Failing CI → `gh run view --log-failed` in a split

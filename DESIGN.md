@@ -17,8 +17,8 @@ Gathered once per open, passed to every section as `ctx`:
 cwd, git root, branch, default branch, PR number (if branch has a PR), time.
 
 Contexts → layouts:
-- `pr` — current branch has an open PR
-- `main` — on the default branch
+- `pr` — on a feature branch (non-default). If there is no open PR yet, the `pr` hero shows a "no PR yet" state: push/create hints and diffstat vs base.
+- `main` — on the default branch (or detached HEAD)
 - `global` — not in a git repo
 
 ## Sections (extension unit)

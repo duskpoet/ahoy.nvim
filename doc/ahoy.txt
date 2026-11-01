@@ -25,8 +25,8 @@ Default keys in the dashboard:
   q      return to the previous buffer
 
 Context is detected once per open and decides the layout:
-  pr      current branch has an open PR (`gh pr view`)
-  main    in a git repo, otherwise
+  pr      on a feature branch (`ctx.pr` is set if it has an open PR)
+  main    on the default branch or detached HEAD
   global  not in a git repo
 
 ==============================================================================

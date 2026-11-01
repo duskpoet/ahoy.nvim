@@ -24,8 +24,13 @@ end
 
 local function finish(ctx, cb)
   local branch = ctx.branch
-  if not branch or branch == ctx.default_branch or not util.has("gh") then
+  if not branch or branch == ctx.default_branch then
     ctx.kind = "main"
+    return cb(ctx)
+  end
+  -- Any feature branch uses the `pr` layout; ctx.pr is nil when there is no open PR yet.
+  ctx.kind = "pr"
+  if not util.has("gh") then
     return cb(ctx)
   end
   util.run(
@@ -38,7 +43,6 @@ local function finish(ctx, cb)
           ctx.pr = pr
         end
       end
-      ctx.kind = ctx.pr and "pr" or "main"
       cb(ctx)
     end
   )
