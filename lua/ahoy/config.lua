@@ -1,7 +1,7 @@
 local M = {}
 
 ---Built-in sections (modules under `ahoy.sections`).
-M.builtin = { "status", "waiting", "my_prs", "latest" }
+M.builtin = { "status", "waiting", "my_prs", "latest", "pr", "threads", "activity" }
 
 M.defaults = {
   show_on_startup = true,

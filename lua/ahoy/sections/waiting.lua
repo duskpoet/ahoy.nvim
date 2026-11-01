@@ -56,8 +56,8 @@ local function row_action(it)
       actions.my_pr(pr, ctx)
     end)
   elseif it.kind == "ci" then
-    local check = it.check or {}
-    return actions.row(check.url or pr.url, function()
+    local check = it.check or { url = pr.url .. "/checks" }
+    return actions.row(check.url, function()
       actions.log_failed(check, pr.repo)
     end)
   end

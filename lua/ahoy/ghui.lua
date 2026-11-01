@@ -32,16 +32,57 @@ end
 
 ---CI state glyph + highlight for a PR.
 function M.ci_icon(pr)
-  local ci = pr.ci
-  if not ci then
+  local gh = require("ahoy.gh")
+  if not pr.ci then
     return "·", "AhoyDim"
-  elseif ci.state == "FAILURE" or ci.state == "ERROR" or #ci.failing > 0 then
+  elseif gh.ci_failing(pr) then
     return "✗", "AhoyError"
-  elseif ci.state == "PENDING" or ci.state == "EXPECTED" or ci.pending > 0 then
+  elseif gh.ci_pending(pr) then
     return "●", "AhoyWarn"
   end
   return "✓", "AhoyOk"
 end
+
+local REVIEW_VERB = {
+  APPROVED = { "approved", "AhoyOk" },
+  CHANGES_REQUESTED = { "requested changes", "AhoyError" },
+  COMMENTED = { "reviewed", "AhoyInfo" },
+  DISMISSED = { "dismissed", "AhoyDim" },
+}
+
+---`{ verb, hl }` for an activity event.
+function M.verb(ev)
+  local k = ev.kind
+  if k == "review" then
+    return REVIEW_VERB[ev.state] or { "reviewed", "AhoyInfo" }
+  elseif k == "commit" then
+    return { "pushed", "AhoyInfo" }
+  elseif k == "force_push" then
+    return { "force-pushed", "AhoyWarn" }
+  elseif k == "thread" then
+    return { "replied", "AhoyWarn" }
+  elseif k == "review_requested" then
+    return { "requested review from", "AhoyDim" }
+  elseif k == "ready" then
+    return { "marked ready for review", "AhoyInfo" }
+  elseif k == "draft" then
+    return { "converted to draft", "AhoyDim" }
+  elseif k == "ci_fail" then
+    return { "✗", "AhoyError" }
+  elseif k == "ci_ok" then
+    return { "✓", "AhoyOk" }
+  end
+  return { "commented", "AhoyInfo" }
+end
+
+---Review-state glyph + highlight (per reviewer).
+M.review_icon = {
+  APPROVED = { "✓", "AhoyOk" },
+  CHANGES_REQUESTED = { "✗", "AhoyError" },
+  COMMENTED = { "◦", "AhoyInfo" },
+  PENDING = { "●", "AhoyWarn" },
+  DISMISSED = { "–", "AhoyDim" },
+}
 
 ---Pad `s` to display width `w`.
 function M.pad(s, w)

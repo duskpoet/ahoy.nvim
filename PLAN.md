@@ -25,11 +25,13 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 - [x] Fixture test with stubbed gh (`tests/github.lua`)
 
 ## Slice 3 — PR view
-- [ ] `pr` hero: CI x/y, per-reviewer state, mergeability, diffstat, timeline
-- [ ] `pr` hero "no PR yet" state (feature branch without open PR): push/create hints, diffstat vs base
-- [ ] `threads` card: unresolved review threads → `<CR>` jumps to file:line
-- [ ] `activity` card: comments, pushes, approvals, CI runs
-- [ ] Failing CI → `gh run view --log-failed` in a split (`actions.log_failed` exists from slice 2; wire into `pr` hero)
+- [x] `pr` hero: CI x/y, per-reviewer state, mergeability, diffstat, timeline
+- [x] `pr` hero "no PR yet" state (feature branch without open PR): push/create hints, diffstat vs base
+- [x] `threads` card: unresolved review threads → `<CR>` jumps to file:line
+- [x] `activity` card: comments, pushes, approvals, CI runs
+- [x] Failing CI → `gh run view --log-failed` in a split (hero rows + activity CI rows)
+- [x] CI judged from de-duplicated checks (latest re-run per name), not GitHub's sticky rollup state
+- [x] Fixture test (`tests/pr.lua`), incl. no-PR state against a temp git repo
 
 ## Slice 4 — Calendar (Google ICS)
 - [ ] Read URL from `~/.config/ahoy/ics_url`; warn if file perms aren't 600

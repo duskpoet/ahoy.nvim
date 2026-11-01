@@ -4,36 +4,17 @@ local ui = require("ahoy.ghui")
 local util = require("ahoy.util")
 local actions = require("ahoy.actions")
 
-local REVIEW_VERB = {
-  APPROVED = { "approved", "AhoyOk" },
-  CHANGES_REQUESTED = { "requested changes", "AhoyError" },
-  COMMENTED = { "reviewed", "AhoyInfo" },
-  DISMISSED = { "dismissed", "AhoyDim" },
-}
-
-local function verb(ev)
-  if ev.kind == "review" then
-    return REVIEW_VERB[ev.state] or { "reviewed", "AhoyInfo" }
-  elseif ev.kind == "commit" then
-    return { "pushed", "AhoyInfo" }
-  elseif ev.kind == "thread" then
-    return { "replied", "AhoyWarn" }
-  end
-  return { "commented", "AhoyInfo" }
-end
-
 ---Drop empty COMMENTED reviews (they're just containers for thread comments, shown separately).
 local function useful(ev)
   return not (ev.kind == "review" and ev.state == "COMMENTED" and (ev.text or "") == "")
 end
-
-
 
 return {
   name = "latest",
   title = "Latest",
   slots = { "card", "ticker" },
   empty = "no recent activity on your PRs",
+  _useful = useful,
   fetch = function(ctx, done)
     gh.main(ctx, function(m, err)
       if err then
@@ -58,7 +39,7 @@ return {
       if slot == "ticker" and i > 1 then
         break
       end
-      local v = verb(ev)
+      local v = ui.verb(ev)
       local left = {
         { (ev.who or "someone") .. " ", "AhoyAccent" },
         { v[1] .. " ", v[2] },

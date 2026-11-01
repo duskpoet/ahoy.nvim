@@ -89,9 +89,18 @@ Built-in sections:
             failing CI, approved+mergeable PRs, @mentions
   my_prs    card/ticker: my open PRs with CI x/y, review state, age
   latest    card/ticker: recent activity by others on my PRs
+  pr        hero: this branch's PR — checks x/y, per-reviewer state,
+            mergeability (and why it's blocked), diffstat, timeline,
+            failing checks (`<CR>` = failed log). Without an open PR:
+            diffstat vs base, push state, and `git push` / `gh pr create`
+            commands (`<CR>` copies; ahoy never runs them)
+  threads   card/ticker: unresolved review threads (● = waiting on you);
+            `<CR>` jumps to file:line, `o` opens the thread
+  activity  card/ticker: comments, reviews, pushes, review requests, CI
 Set `sections = { status = false }` to remove a built-in.
 
-The GitHub sections share one `gh api graphql` request per refresh and need
+The GitHub sections share one `gh api graphql` request per refresh (one for
+the main view, one for the PR view) and need
 an authenticated `gh` CLI. Row actions (`<CR>`):
   review request   `gh pr checkout` + `:Git difftool -y origin/<base>...`
   threads, my PR   `gh pr checkout` + refresh (lands in the `pr` layout)
