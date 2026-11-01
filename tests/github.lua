@@ -109,7 +109,7 @@ gh.graphql = function(q, vars, cb)
 end
 
 local L = { header = "status", cards = { "waiting", "my_prs", "latest" }, tickers = { "my_prs", "waiting" } }
-require("ahoy").setup({ show_on_startup = false, layouts = { main = L, pr = L, global = L } })
+require("ahoy").setup({ show_on_startup = false, browser = "open", layouts = { main = L, pr = L, global = L } })
 vim.o.columns = 200
 local ahoy = require("ahoy")
 ahoy.open()
@@ -175,6 +175,26 @@ opened = nil
 press_on("⟨unit tests⟩", "o")
 check("o failing CI → browser", opened == "https://ci/unit tests")
 actions.log_failed = orig_log
+
+-- copy mode (SSH): URL goes to the "+" register instead of a browser
+local copied
+local orig_setreg = vim.fn.setreg
+vim.fn.setreg = function(reg, val)
+  if reg == "+" then
+    copied = val
+  end
+end
+ahoy.config.browser = "copy"
+opened = nil
+press_on("Ping about thing", "o")
+check("copy mode → + register", copied == "https://github.com/acme/app/issues/77" and opened == nil)
+ahoy.config.browser = "auto"
+vim.env.SSH_CONNECTION = "1.2.3.4 1 5.6.7.8 22"
+copied = nil
+press_on("Ping about thing", "o")
+check("auto over SSH copies", copied == "https://github.com/acme/app/issues/77" and opened == nil)
+vim.fn.setreg = orig_setreg
+ahoy.config.browser = "open"
 
 -- error surfacing
 gh.graphql = function(_, _, cb)

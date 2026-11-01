@@ -12,14 +12,50 @@ local function keys()
   return ok and ahoy.config and ahoy.config.keys or require("ahoy.config").defaults.keys
 end
 
+---Copy `url` to the system clipboard ("+": reaches the local machine over SSH when the
+---clipboard provider is OSC 52). Falls back to writing OSC 52 directly.
+function M.copy(url)
+  local ok = pcall(vim.fn.setreg, "+", url)
+  if not ok then
+    ok = pcall(function()
+      require("vim.ui.clipboard.osc52").copy("+")({ url })
+    end)
+  end
+  if ok then
+    notify("copied " .. url)
+  else
+    notify("couldn't copy; URL: " .. url, vim.log.levels.WARN)
+  end
+end
+
+local function remote()
+  return (vim.env.SSH_CONNECTION or vim.env.SSH_TTY or "") ~= ""
+end
+
+---Open `url` per `config.browser`: "auto" (copy over SSH, else open; copy if opening fails),
+---"open", "copy", or a function(url).
 function M.browser(url)
   if not url then
     return notify("no URL for this row", vim.log.levels.WARN)
   end
-  local ok, err = pcall(vim.ui.open, url)
-  if not ok then
-    notify("could not open " .. url .. ": " .. tostring(err), vim.log.levels.ERROR)
+  local ok_cfg, ahoy = pcall(require, "ahoy")
+  local mode = ok_cfg and ahoy.config and ahoy.config.browser or "auto"
+  if type(mode) == "function" then
+    return mode(url)
   end
+  if mode == "copy" or (mode == "auto" and remote()) then
+    return M.copy(url)
+  end
+  local ok, res, err = pcall(vim.ui.open, url)
+  if ok and not err then
+    return
+  end
+  local msg = tostring(ok and err or res)
+  if mode == "auto" then
+    notify("can't open browser (" .. msg .. ")", vim.log.levels.WARN)
+    return M.copy(url)
+  end
+  notify("could not open " .. url .. ": " .. msg, vim.log.levels.ERROR)
 end
 
 ---Row keymaps: `<CR>` runs `open` (defaults to the browser), `o` always opens `url` in the browser.

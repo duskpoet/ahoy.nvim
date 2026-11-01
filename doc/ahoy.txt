@@ -45,6 +45,8 @@ Context is detected once per open and decides the layout:
     grid = { two_columns = 160, compact = 100, max_width = 220,
              card_max_lines = 14, hero_max_lines = 10 },
     keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
+    browser = "auto",              -- "open" | "copy" | function(url); auto
+                                   -- copies to "+" over SSH (OSC 52-friendly)
     github = { limit = 30, mentions_days = 14, latest = 12,
                max_reviews = 5, hide_bots = true },
   })

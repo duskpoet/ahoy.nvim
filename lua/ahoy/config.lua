@@ -24,6 +24,9 @@ M.defaults = {
     hero_max_lines = 10,
   },
   keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
+  ---How `o` (and browser-type <CR>) handle URLs: "auto" copies to the clipboard (+) over SSH and
+  ---opens otherwise, falling back to copy; "open", "copy", or function(url).
+  browser = "auto",
   github = {
     limit = 30, -- max PRs per search
     mentions_days = 14, -- only mentions in issues/PRs updated this recently
