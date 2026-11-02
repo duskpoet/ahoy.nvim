@@ -47,6 +47,9 @@ Context is detected once per open and decides the layout:
     keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
     browser = "auto",              -- "open" | "copy" | function(url); auto
                                    -- copies to "+" over SSH (OSC 52-friendly)
+    timezone = nil,                -- "Europe/Berlin"; nil = system zone
+    calendar = { url_file = "~/.config/ahoy/ics_url", email = nil,
+                 day_start = 9, day_end = 18 },
     github = { limit = 30, mentions_days = 14, latest = 12,
                max_reviews = 5, hide_bots = true },
   })
@@ -111,6 +114,24 @@ first if the working tree is dirty. `o` always opens the row in the browser.
 ahoy never merges, pushes or comments.
 
 `ctx.repo` is "owner/name" parsed from the `origin` remote.
+
+Calendar sections (shown only when the URL file exists):
+  next_meeting  hero/ticker: current or next meeting with countdown, call
+                link (`<CR>`), what's after, and a working-day strip
+                (━ elapsed, ▆ meetings, ● now). Empty when nothing is
+                left today, so a hero fallback list moves on.
+  calendar      card "Today": every event today; past dimmed, current
+                marked, declined labelled; "fetched at" + warnings.
+
+Put your Google Calendar "Secret address in iCal format" in
+`~/.config/ahoy/ics_url` and `chmod 600` it (ahoy warns otherwise). The URL
+is never accepted in setup(), is handed to curl on stdin (not visible in
+`ps`), and is never displayed. Supported recurrence: DAILY/WEEKLY/MONTHLY/
+YEARLY with INTERVAL, BYDAY (incl. 2TU / -1FR), BYMONTHDAY, BYMONTH, WKST,
+UNTIL, COUNT, EXDATE, RDATE, RECURRENCE-ID overrides and TZID (system
+zoneinfo). Anything else is shown with ⚠. Declined = PARTSTAT=DECLINED for
+`calendar.email` (default: the calendar name if it is an email).
+Countdowns re-render every minute without refetching.
 
 ==============================================================================
 4. HIGHLIGHTS                                                *ahoy-highlights*

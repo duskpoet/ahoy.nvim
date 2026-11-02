@@ -114,6 +114,36 @@ function M.has(exe)
   return vim.fn.executable(exe) == 1
 end
 
+-- One producer run per (owner table, key), fanned out to every waiter. The dashboard passes
+-- its ctx (recreated on each refresh), so sections sharing a source cause one fetch.
+local shared_runs = setmetatable({}, { __mode = "k" })
+
+---`start(finish)` runs once per (owner, key); `finish(...)` settles it; `cb(...)` gets the result
+---(scheduled if already settled).
+function M.shared(owner, key, start, cb)
+  shared_runs[owner] = shared_runs[owner] or {}
+  local e = shared_runs[owner][key]
+  if e then
+    if e.done then
+      return vim.schedule(function()
+        cb(unpack(e.res, 1, e.res.n))
+      end)
+    end
+    return table.insert(e.waiters, cb)
+  end
+  e = { waiters = { cb } }
+  shared_runs[owner][key] = e
+  start(function(...)
+    if e.done then
+      return
+    end
+    e.done, e.res = true, { n = select("#", ...), ... }
+    for _, w in ipairs(e.waiters) do
+      w(...)
+    end
+  end)
+end
+
 ---Async command. `cb(res)` runs on the main loop with `res = { code, stdout, stderr, ms }`.
 ---Never throws: a missing executable yields `code = -1`.
 function M.run(cmd, opts, cb)
@@ -123,6 +153,7 @@ function M.run(cmd, opts, cb)
     text = true,
     cwd = opts.cwd,
     env = opts.env,
+    stdin = opts.stdin,
     timeout = opts.timeout or 15000,
   }, function(res)
     res.ms = (M.uv.hrtime() - start) / 1e6

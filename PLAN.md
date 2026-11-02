@@ -34,12 +34,14 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 - [x] Fixture test (`tests/pr.lua`), incl. no-PR state against a temp git repo
 
 ## Slice 4 — Calendar (Google ICS)
-- [ ] Read URL from `~/.config/ahoy/ics_url`; warn if file perms aren't 600
-- [ ] `curl` fetch, line unfolding, VEVENT parse
-- [ ] Recurrence subset: DAILY/WEEKLY/MONTHLY, INTERVAL, BYDAY, UNTIL, COUNT, EXDATE, RECURRENCE-ID, TZID; ⚠ on unsupported
-- [ ] Expand for today only
-- [ ] Fixture tests from a sanitized copy of the real feed
-- [ ] `next_meeting` (hero + ticker), `calendar` card; countdown + day progress via 1-min timer; Meet link on `<CR>`; "fetched at"
+- [x] Read URL from `~/.config/ahoy/ics_url`; warn if file perms aren't 600 (URL passed to curl via stdin, never shown)
+- [x] `curl` fetch, line unfolding, VEVENT parse
+- [x] Recurrence subset: DAILY/WEEKLY/MONTHLY(/YEARLY), INTERVAL, BYDAY, BYMONTHDAY, BYMONTH, UNTIL, COUNT, EXDATE, RDATE, RECURRENCE-ID, TZID; ⚠ on unsupported
+- [x] TZ from system zoneinfo (TZif + POSIX footer), `timezone` option for remote boxes
+- [x] Expand for today only
+- [x] Fixture tests (`tests/calendar.lua`, hand-written `tests/fixtures/calendar.ics`)
+- [ ] Fixture from a sanitized copy of the real feed (needs `ics_url`)
+- [x] `next_meeting` (hero + ticker), `calendar` card; countdown + day progress via 1-min timer; Meet link on `<CR>`; "fetched at"
 
 ## Slice 5 — Idle pool & fun
 - [ ] State file `stdpath("data")/ahoy/state.json` (last inbox zero, rotation history)

@@ -306,39 +306,23 @@ local function search_vars()
   }
 end
 
--- One request per (dashboard refresh, query), shared by every section. Keyed by the ctx table,
--- which is recreated on each refresh.
-local inflight = setmetatable({}, { __mode = "k" })
-
----Run `query` once per ctx under `key`, normalize with `norm(data)`, fan out `cb(model, err)`.
+---Run `query` once per ctx (dashboard refresh) under `key`, normalize with `norm(data)`,
+---fan out `cb(model, err)` to every section that asked.
 local function shared(ctx, key, query, vars, norm, cb)
-  inflight[ctx] = inflight[ctx] or {}
-  local e = inflight[ctx][key]
-  if e then
-    if e.done then
-      return vim.schedule(function()
-        cb(e.model, e.err)
-      end)
-    end
-    return table.insert(e.waiters, cb)
-  end
-  e = { waiters = { cb } }
-  inflight[ctx][key] = e
-  M.graphql(query, vars, function(data, err)
-    local model
-    if data then
-      local ok, res = pcall(norm, data)
-      if ok then
-        model = res
-      else
-        err = "normalize: " .. tostring(res)
+  util.shared(ctx, "gh:" .. key, function(finish)
+    M.graphql(query, vars, function(data, err)
+      local model
+      if data then
+        local ok, res = pcall(norm, data)
+        if ok then
+          model = res
+        else
+          err = "normalize: " .. tostring(res)
+        end
       end
-    end
-    e.done, e.model, e.err = true, model, err
-    for _, w in ipairs(e.waiters) do
-      w(model, err)
-    end
-  end)
+      finish(model, err)
+    end)
+  end, cb)
 end
 
 ---Fetch the normalized main-view model. `cb(model, err)`.

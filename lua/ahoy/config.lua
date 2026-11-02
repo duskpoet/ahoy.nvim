@@ -1,7 +1,7 @@
 local M = {}
 
 ---Built-in sections (modules under `ahoy.sections`).
-M.builtin = { "status", "waiting", "my_prs", "latest", "pr", "threads", "activity" }
+M.builtin = { "status", "waiting", "my_prs", "latest", "pr", "threads", "activity", "next_meeting", "calendar" }
 
 M.defaults = {
   show_on_startup = true,
@@ -27,6 +27,14 @@ M.defaults = {
   ---How `o` (and browser-type <CR>) handle URLs: "auto" copies to the clipboard (+) over SSH and
   ---opens otherwise, falling back to copy; "open", "copy", or function(url).
   browser = "auto",
+  ---IANA zone for clocks and the calendar ("Europe/Berlin"); nil = system zone. Handy on a remote box.
+  timezone = nil,
+  calendar = {
+    url_file = "~/.config/ahoy/ics_url", -- private ICS URL; keep it chmod 600
+    email = nil, -- whose RSVP counts for "declined"; nil = the calendar's name if it's an email
+    day_start = 9, -- working-day bounds for the progress bar (hours, display zone)
+    day_end = 18,
+  },
   github = {
     limit = 30, -- max PRs per search
     mentions_days = 14, -- only mentions in issues/PRs updated this recently
@@ -51,7 +59,7 @@ function M.setup(opts)
       for kind, l in pairs(v) do
         cfg.layouts[kind] = l and vim.tbl_extend("force", cfg.layouts[kind] or {}, l) or nil
       end
-    elseif k == "grid" or k == "keys" or k == "github" then
+    elseif k == "grid" or k == "keys" or k == "github" or k == "calendar" then
       cfg[k] = vim.tbl_extend("force", cfg[k], v)
     elseif k ~= "sections" then
       cfg[k] = v

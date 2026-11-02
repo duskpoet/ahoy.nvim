@@ -40,7 +40,7 @@ return {
         add("  no upstream", "AhoyDim")
       end
     end
-    local right = os.date("%a %d %b  %H:%M")
+    local right = require("ahoy.calendar").fmt(os.time(), "%a %d %b  %H:%M")
     local gap = width - util.segs_width(segs) - util.width(right)
     if gap >= 2 then
       add(string.rep(" ", gap))
