@@ -1,0 +1,3 @@
+# Built from a personal calendar feed — keep local
+tests/fixtures/real_sanitized.ics
+tests/fixtures/real_expected.json

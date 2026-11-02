@@ -91,6 +91,44 @@ local main = function()
   end
   check("display zone shifts times", s_la == "00:30")
 
+  -- sanitized real feed vs. reference expansion (icalendar + recurring-ical-events) --
+  -- Local-only (gitignored): built from your own feed; skipped when absent.
+  local rf = io.open("tests/fixtures/real_sanitized.ics", "rb")
+  if not rf then
+    print("skip real feed check (tests/fixtures/real_sanitized.ics not present)")
+  else
+    local real = ics.parse(rf:read("*a"))
+    rf:close()
+    local ef = assert(io.open("tests/fixtures/real_expected.json"))
+    local expected = vim.json.decode(ef:read("*a"))
+    ef:close()
+    local lon = "Europe/London"
+    local missing, extra, total = 0, 0, 0
+    for day, keys in pairs(expected) do
+      local y, m, d = day:match("(%d+)-(%d+)-(%d+)")
+      local D = util.days_from_civil(tonumber(y), tonumber(m), tonumber(d))
+      local got = {}
+      for _, o in ipairs(ics.expand(real, tz.to_utc(lon, D * 86400), tz.to_utc(lon, (D + 1) * 86400), { zone = lon })) do
+        got[o.uid .. "|" .. o.start] = true
+      end
+      local want = {}
+      for _, k in ipairs(keys) do
+        want[k] = true
+        total = total + 1
+        if not got[k] then
+          missing = missing + 1
+        end
+      end
+      for k in pairs(got) do
+        if not want[k] then
+          extra = extra + 1
+        end
+      end
+    end
+    check(("real feed matches reference (%d occurrences, %d missing, %d extra)"):format(total, missing, extra),
+      total > 0 and missing == 0 and extra == 0)
+  end
+
   -- secret URL handling ---------------------------------------------------------
   local cal_mod = require("ahoy.calendar")
   local dir = vim.fn.tempname()

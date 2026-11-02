@@ -40,7 +40,7 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 - [x] TZ from system zoneinfo (TZif + POSIX footer), `timezone` option for remote boxes
 - [x] Expand for today only
 - [x] Fixture tests (`tests/calendar.lua`, hand-written `tests/fixtures/calendar.ics`)
-- [ ] Fixture from a sanitized copy of the real feed (needs `ics_url`)
+- [x] Fixture from a sanitized copy of the real feed — local only (gitignored); expansion matches `recurring-ical-events` exactly (146/146 live over 121 days, 73/73 fixture)
 - [x] `next_meeting` (hero + ticker), `calendar` card; countdown + day progress via 1-min timer; Meet link on `<CR>`; "fetched at"
 
 ## Slice 5 — Idle pool & fun
