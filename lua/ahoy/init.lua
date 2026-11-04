@@ -42,6 +42,16 @@ local function builtin(key)
   elseif key == k.refresh then
     return M.refresh
   end
+  -- Quick dial: only the actions currently shown (their `when` passed for this context).
+  if S.ctx and S.plan and vim.tbl_contains(S.plan.names, "dial") then
+    local dial = require("ahoy.sections.dial")
+    local a = dial.by_key(key, S.ctx)
+    if a then
+      return function()
+        dial.run(a, S.ctx)
+      end
+    end
+  end
 end
 
 ---Run the action for `key` on the row under the cursor, else the built-in for that key.
@@ -142,8 +152,12 @@ local function cleanup()
   stop_timer("clock")
   S.buf, S.ctx, S.plan, S.states, S.regions, S.mapped = nil, nil, nil, {}, {}, {}
   S.gen = S.gen + 1
+  -- Deferred (we're inside one of the group's autocmds). Skip if a new dashboard was opened
+  -- meanwhile: create_buf() already reset the group and its autocmds belong to the new buffer.
   vim.schedule(function()
-    pcall(vim.api.nvim_del_augroup_by_name, "ahoy_buf")
+    if not valid() then
+      pcall(vim.api.nvim_del_augroup_by_name, "ahoy_buf")
+    end
   end)
 end
 
@@ -175,6 +189,14 @@ local function create_buf()
   local k = cfg().keys
   for _, key in ipairs({ k.open, k.browser, k.refresh, k.quit }) do
     map(key)
+  end
+  -- Dial keys only when the section exists (`sections = { dial = false }` leaves counts etc. alone).
+  if cfg().sections.dial then
+    for _, a in ipairs(cfg().dial) do
+      if a.key then
+        map(a.key)
+      end
+    end
   end
 end
 

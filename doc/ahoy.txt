@@ -38,12 +38,13 @@ Context is detected once per open and decides the layout:
     keymap = "<leader>a",          -- open/refresh mapping, nil for none
     idle = true,                   -- false disables the idle pool
     sections = { ... },            -- see |ahoy-sections|
+    dial = { ... },                -- quick dial actions, see |ahoy-dial|
     layouts = {
       main   = { header = "status", hero = "calendar",
-                 cards = { "waiting", "my_prs", "latest" } },
+                 cards = { "dial", "waiting", "my_prs", "latest" } },
       pr     = { header = "status", hero = "calendar",
-                 cards = { "pr", "threads", "activity" } },
-      global = { hero = "calendar", cards = { "waiting", "streak" } },
+                 cards = { "dial", "pr", "threads", "activity" } },
+      global = { hero = "calendar", cards = { "dial", "waiting", "streak" } },
     },
     grid = { two_columns = 160, compact = 100, max_width = 220,
              card_max_lines = 14, hero_max_lines = 18 },
@@ -62,7 +63,34 @@ Slots: `header` (one section), `hero` (fallback list: the first section that
 is loading or has data wins), `tickers` (one-line strips), `cards` (grid,
 two-up when the window is at least `grid.two_columns` wide; a section with
 `wide = true`, like `pr`, always takes a full row).
-The calendar is the hero in every context by default.
+The calendar is the hero in every context by default, followed by the quick
+dial.
+
+                                                                   *ahoy-dial*
+The `dial` section ("Quick dial") lists your own actions. It is hidden while
+`dial` is empty or no action applies to the context. Each action:
+>lua
+  dial = {
+    {
+      key    = "1",                      -- dashboard-wide key (optional)
+      label  = "Review a PR",
+      desc   = "pr-review",              -- dim right-hand text (optional)
+      when   = function(ctx) return ctx.kind ~= "global" end,  -- optional
+      input  = "PR (empty = current): ", -- ask first; {input} = the answer
+      -- exactly one of:
+      harner = "/pr-review {input}",     -- string or fn(ctx, input) -> prompt
+      -- run = function(ctx, input) end,
+      -- cmd = "Git log {input}",        -- Ex command
+    },
+  }
+<
+`<CR>` on the row or the action's `key` runs it. Cancelling the `input`
+prompt aborts. `harner` sends the prompt to the duskpoet/harner chat, so
+`/skill args` invokes a Claude skill. Keys that clash with `keys` are
+dropped. A key may be reused when `when` keeps the actions apart (e.g. `2`
+on `pr` and on `main`); if several visible actions share a key, the first
+one keeps it. Dial actions run whatever you configure; ahoy itself still never
+writes to a remote.
 
 ==============================================================================
 3. SECTIONS                                                    *ahoy-sections*
@@ -94,6 +122,7 @@ card. `ctx` has: cwd, time, kind, root, branch, default_branch, git, pr.
 
 Built-in sections:
   status    header: path, branch, clean/dirty, ahead/behind, date/time
+  dial      card/ticker: quick dial actions from `dial`, see |ahoy-dial|
   waiting   card/ticker: review requests, unresolved threads on my PRs,
             failing CI, approved+mergeable PRs, @mentions
   my_prs    card/ticker: my open PRs with CI x/y, review state, age

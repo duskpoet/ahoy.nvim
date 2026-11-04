@@ -1,7 +1,7 @@
 local M = {}
 
 ---Built-in sections (modules under `ahoy.sections`).
-M.builtin = { "status", "waiting", "my_prs", "latest", "pr", "threads", "activity", "next_meeting", "calendar" }
+M.builtin = { "status", "dial", "waiting", "my_prs", "latest", "pr", "threads", "activity", "next_meeting", "calendar" }
 
 M.defaults = {
   show_on_startup = true,
@@ -11,11 +11,16 @@ M.defaults = {
   idle = true,
   ---User sections: a list of specs or a map of name -> spec. `name = false` disables a built-in.
   sections = {},
+  ---Quick dial actions (the `dial` section; hidden while empty). Each:
+  ---  { key = "1", label = "…", desc = "…", when = fn(ctx), input = "Prompt: ",
+  ---    run = fn(ctx, input) | cmd = "Ex {input}" | harner = "/skill {input}" | fn(ctx, input) }
+  dial = {},
   ---The calendar is the hero everywhere; it never goes empty (setup hint / "no meetings today").
+  ---The quick dial comes right after it.
   layouts = {
-    main = { header = "status", hero = "calendar", cards = { "waiting", "my_prs", "latest" } },
-    pr = { header = "status", hero = "calendar", cards = { "pr", "threads", "activity" } },
-    global = { hero = "calendar", cards = { "waiting", "streak" } },
+    main = { header = "status", hero = "calendar", cards = { "dial", "waiting", "my_prs", "latest" } },
+    pr = { header = "status", hero = "calendar", cards = { "dial", "pr", "threads", "activity" } },
+    global = { hero = "calendar", cards = { "dial", "waiting", "streak" } },
   },
   grid = {
     two_columns = 160, -- window width at which cards go two-up
@@ -48,6 +53,27 @@ M.defaults = {
 local function valid_section(s)
   return type(s) == "table" and type(s.name) == "string" and type(s.render) == "function"
     and (s.fetch == nil or type(s.fetch) == "function")
+end
+
+---nil if dial action `a` is usable, else why not.
+local function valid_dial(a)
+  if type(a) ~= "table" then
+    return "not a table"
+  end
+  local n = (a.run ~= nil and 1 or 0) + (a.cmd ~= nil and 1 or 0) + (a.harner ~= nil and 1 or 0)
+  if n ~= 1 then
+    return "needs exactly one of run, cmd, harner"
+  elseif a.run ~= nil and type(a.run) ~= "function" then
+    return "run must be a function"
+  elseif a.cmd ~= nil and type(a.cmd) ~= "string" then
+    return "cmd must be a string"
+  elseif a.harner ~= nil and type(a.harner) ~= "string" and type(a.harner) ~= "function" then
+    return "harner must be a string or function"
+  elseif a.key ~= nil and (type(a.key) ~= "string" or a.key == "") then
+    return "key must be a non-empty string"
+  elseif a.when ~= nil and type(a.when) ~= "function" then
+    return "when must be a function"
+  end
 end
 
 function M.setup(opts)
@@ -90,6 +116,31 @@ function M.setup(opts)
     end
   end
   cfg.sections = sections
+
+  local reserved = {}
+  for _, k in pairs(cfg.keys) do
+    reserved[k] = true
+  end
+  local dial, always = {}, {} -- always[key]: an action without `when` already uses it
+  for i, a in ipairs(type(cfg.dial) == "table" and cfg.dial or {}) do
+    local why = valid_dial(a)
+    if why then
+      vim.notify(("ahoy: ignoring dial #%d (%s)"):format(i, why), vim.log.levels.WARN)
+    else
+      if a.key and reserved[a.key] then
+        vim.notify(("ahoy: dial key %q clashes with a dashboard key; unbound"):format(a.key), vim.log.levels.WARN)
+        a = vim.tbl_extend("force", a, { key = false })
+      elseif a.key and always[a.key] then
+        -- Shared keys are fine when `when` keeps them apart; after an unconditional one they never fire.
+        vim.notify(("ahoy: dial key %q already used by an earlier action; #%d only runs via <CR>"):format(a.key, i), vim.log.levels.WARN)
+      end
+      if a.key and not a.when then
+        always[a.key] = true
+      end
+      dial[#dial + 1] = a
+    end
+  end
+  cfg.dial = dial
 
   return cfg
 end

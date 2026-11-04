@@ -11,6 +11,20 @@ local function keys()
   local ok, ahoy = pcall(require, "ahoy")
   return ok and ahoy.config and ahoy.config.keys or require("ahoy.config").defaults.keys
 end
+M.keys = keys
+
+---Send `prompt` to the harner chat (duskpoet/harner); a "/skill args" prompt invokes a skill.
+function M.harner(prompt)
+  local ok, h = pcall(require, "harner")
+  if not ok or type(h.ask) ~= "function" then
+    return notify("harner isn't installed", vim.log.levels.WARN)
+  end
+  prompt = vim.trim(prompt or "")
+  if prompt == "" then
+    return notify("empty harner prompt", vim.log.levels.WARN)
+  end
+  h.ask(prompt)
+end
 
 ---Copy `url` to the system clipboard ("+": reaches the local machine over SSH when the
 ---clipboard provider is OSC 52). Falls back to writing OSC 52 directly.
