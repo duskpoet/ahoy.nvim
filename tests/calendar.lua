@@ -257,6 +257,41 @@ local main = function()
   end
   check("<CR> opens Meet link", opened == "https://meet.google.com/xyz-abcd-efg")
 
+  -- default layouts: the calendar is the hero in every context, never hidden ----------
+  local ctx_mod = require("ahoy.context")
+  local function with_defaults(url_file, kind)
+    require("ahoy").setup({ show_on_startup = false, browser = "open", timezone = zname,
+      calendar = { url_file = url_file, day_start = 8, day_end = 18 } })
+    ctx_mod.detect = function(cb)
+      vim.schedule(function()
+        cb({ cwd = dir, time = os.time(), kind = kind })
+      end)
+    end
+    util.run = function(cmd, opts, cb)
+      vim.schedule(function()
+        cb({ code = cmd[1] == "curl" and 0 or 1, stdout = cmd[1] == "curl" and live or "", stderr = "" })
+      end)
+    end
+    ahoy.refresh()
+    vim.wait(3000, settled, 20)
+    util.run = orig_run
+    local out = text_()
+    if os.getenv("AHOY_DUMP") then
+      print(out)
+    end
+    return out
+  end
+  for _, kind in ipairs({ "main", "pr", "global" }) do
+    t = with_defaults(urlf, kind)
+    local first_box = t:match("╭─ ([^\n]-) ─")
+    check(kind .. ": calendar is the hero", first_box and first_box:find("^Today · %a+ %d+ %a+") ~= nil)
+    check(kind .. ": hero has headline + agenda", t:find("● now  Current sync") and t:find("Morning thing")
+      and t:find("Later chat") and t:find("▶ %d%d:%d%d–%d%d:%d%d  Current sync"))
+  end
+  t = with_defaults(dir .. "/missing_url", "global")
+  check("unconfigured: hint in hero", t:find("╭─ Today") and t:find("Calendar not connected")
+    and t:find("missing_url") and t:find("08:00 [━─●]") ~= nil)
+
   -- no remaining meetings → next_meeting empty (hero falls through)
   local nm = require("ahoy.sections.next_meeting")
   local model = cal_mod.build(table.concat({ "BEGIN:VCALENDAR", "BEGIN:VEVENT", "UID:x", "SUMMARY:Done",

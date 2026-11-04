@@ -212,6 +212,7 @@ return {
   name = "pr",
   title = "Pull request",
   slots = { "hero", "card" },
+  wide = true, -- full row when used as a card
   when = function(ctx)
     return ctx.root ~= nil and ctx.branch ~= nil
   end,

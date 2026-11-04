@@ -87,15 +87,32 @@ local function detail(e)
   return segs
 end
 
-local function render_hero(d, width)
-  local now = os.time()
+---Current meeting (or the next one, or "no more meetings") + its detail row. Returns cur, nxt.
+local function headline(b, d, now)
   local cur, nxt = cal.split(d, now)
-  local b = ui.builder(width)
+  local fetched = "fetched " .. cal.fmt(d.fetched)
+  local e = cur[1] or nxt[1]
   if cur[1] then
-    local e = cur[1]
     b:add({ { "● now  ", "AhoyOk" }, { e.title, "AhoyHeroTitle" } }, { { cal.countdown(e.stop - now) .. " left", "AhoyOk" } },
       keys(e))
-    b:add(detail(e), "fetched " .. cal.fmt(d.fetched), keys(e))
+  elseif e then
+    local secs = e.start - now
+    b:add({ { "▶ ", urgency(secs) }, { e.title, "AhoyHeroTitle" } }, { { "in " .. cal.countdown(secs), urgency(secs) } },
+      keys(e))
+  else
+    local msg = #cal.meetings(d) == 0 and "No meetings today" or "No more meetings today"
+    b:add({ { "✓ ", "AhoyOk" }, { msg, "AhoyHeroTitle" } }, fetched)
+    return cur, nxt
+  end
+  b:add(detail(e), fetched, keys(e))
+  return cur, nxt
+end
+
+local function render_hero(d, width)
+  local now = os.time()
+  local b = ui.builder(width)
+  local cur, nxt = headline(b, d, now)
+  if cur[1] then
     if #cur > 1 then
       b:add({ label("also"), { cur[2].title .. (#cur > 2 and (" (+" .. (#cur - 2) .. ")") or ""), "AhoyDim" } }, nil,
         keys(cur[2]))
@@ -105,23 +122,14 @@ local function render_hero(d, width)
       b:add({ label("next"), { cal.fmt(nxt[1].start) .. " ", "AhoyAccent" }, { nxt[1].title } },
         { { "in " .. cal.countdown(secs), urgency(secs) } }, keys(nxt[1]))
     end
-  elseif nxt[1] then
-    local e = nxt[1]
-    local secs = e.start - now
-    b:add({ { "▶ ", urgency(secs) }, { e.title, "AhoyHeroTitle" } }, { { "in " .. cal.countdown(secs), urgency(secs) } },
-      keys(e))
-    b:add(detail(e), "fetched " .. cal.fmt(d.fetched), keys(e))
-    if nxt[2] then
-      local more = #nxt - 2
-      b:add({
-        label("then"),
-        { cal.fmt(nxt[2].start) .. " ", "AhoyAccent" },
-        { nxt[2].title },
-        more > 0 and { ("  +%d more today"):format(more), "AhoyDim" } or nil,
-      }, nil, keys(nxt[2]))
-    end
-  else
-    b:add({ { "✓ ", "AhoyOk" }, { "No more meetings today", "AhoyHeroTitle" } }, "fetched " .. cal.fmt(d.fetched))
+  elseif nxt[2] then
+    local more = #nxt - 2
+    b:add({
+      label("then"),
+      { cal.fmt(nxt[2].start) .. " ", "AhoyAccent" },
+      { nxt[2].title },
+      more > 0 and { ("  +%d more today"):format(more), "AhoyDim" } or nil,
+    }, nil, keys(nxt[2]))
   end
   local bar = day_bar(d, now, width)
   if bar then
@@ -181,4 +189,5 @@ return {
     return render_hero(d, width)
   end,
   _day_bar = day_bar,
+  _headline = headline,
 }

@@ -11,17 +11,18 @@ M.defaults = {
   idle = true,
   ---User sections: a list of specs or a map of name -> spec. `name = false` disables a built-in.
   sections = {},
+  ---The calendar is the hero everywhere; it never goes empty (setup hint / "no meetings today").
   layouts = {
-    main = { header = "status", hero = { "next_meeting", "idle" }, cards = { "waiting", "my_prs", "calendar", "latest" } },
-    pr = { header = "status", hero = "pr", cards = { "threads", "activity" }, tickers = { "next_meeting" } },
-    global = { hero = { "next_meeting", "idle" }, cards = { "waiting", "streak" } },
+    main = { header = "status", hero = "calendar", cards = { "waiting", "my_prs", "latest" } },
+    pr = { header = "status", hero = "calendar", cards = { "pr", "threads", "activity" } },
+    global = { hero = "calendar", cards = { "waiting", "streak" } },
   },
   grid = {
     two_columns = 160, -- window width at which cards go two-up
     compact = 100, -- below this width margins shrink
     max_width = 220, -- content is centered and capped at this width
     card_max_lines = 14,
-    hero_max_lines = 10,
+    hero_max_lines = 18, -- room for the calendar hero: headline, day strip, agenda
   },
   keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
   ---How `o` (and browser-type <CR>) handle URLs: "auto" copies to the clipboard (+) over SSH and

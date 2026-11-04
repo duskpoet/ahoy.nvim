@@ -36,16 +36,16 @@ Defined by the user in `setup({ sections = {...} })`. No public registry yet (ke
 
 ## Slots & layout
 - `header` — borderless 1–2 lines at top (repo status: path, branch, clean/dirty, ahead/behind, date/time)
-- `hero`   — full-width card (next meeting on main; the PR itself on a PR branch). Accepts a fallback list: first section with data wins.
-- `card`   — grid cards; ≥160 cols → 2 columns, <100 → single column; reflow on `VimResized`
-- `ticker` — one-line strips (e.g. next meeting on a PR branch)
+- `hero`   — full-width card. The calendar is the hero in every context: it's the main part of ahoy and is always visible (setup hint when unconfigured, "No meetings today" when empty). Accepts a fallback list: first section with data wins.
+- `card`   — grid cards; ≥160 cols → 2 columns, <100 → single column; reflow on `VimResized`. `wide = true` sections (the PR) take a full row.
+- `ticker` — one-line strips
 - `idle`   — fills only otherwise-empty slots; never displaces real info
 
 ```lua
 layouts = {
-  main   = { header = "status", hero = { "next_meeting", "idle" }, cards = { "waiting", "my_prs", "calendar", "latest" } },
-  pr     = { header = "status", hero = "pr", cards = { "threads", "activity" }, tickers = { "next_meeting" } },
-  global = { hero = { "next_meeting", "idle" }, cards = { "waiting", "streak" } },
+  main   = { header = "status", hero = "calendar", cards = { "waiting", "my_prs", "latest" } },
+  pr     = { header = "status", hero = "calendar", cards = { "pr", "threads", "activity" } },
+  global = { hero = "calendar", cards = { "waiting", "streak" } },
 }
 ```
 
@@ -64,7 +64,7 @@ layouts = {
 - Fetched with `curl`, parsed in Lua.
 - Recurrence subset: `FREQ=DAILY/WEEKLY/MONTHLY`, `INTERVAL`, `BYDAY`, `UNTIL`, `COUNT`, `EXDATE`, `RECURRENCE-ID` overrides, `TZID`. Unsupported rules flagged with ⚠.
 - Expansion window: today only.
-- Shows: next meeting hero with countdown + rest of today; `<CR>` opens Meet link (from DESCRIPTION/LOCATION).
+- Shows: one hero box — current/next meeting with countdown, day strip, today's agenda; `<CR>` opens Meet link (from DESCRIPTION/LOCATION).
 - Header shows "fetched at" (Google feed can lag).
 
 ## Idle pool (rotating, context-aware first)

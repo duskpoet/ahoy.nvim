@@ -39,11 +39,14 @@ Context is detected once per open and decides the layout:
     idle = true,                   -- false disables the idle pool
     sections = { ... },            -- see |ahoy-sections|
     layouts = {
-      main = { header = "status", hero = { "next_meeting", "idle" },
-               cards = { "waiting", "my_prs" }, tickers = {} },
+      main   = { header = "status", hero = "calendar",
+                 cards = { "waiting", "my_prs", "latest" } },
+      pr     = { header = "status", hero = "calendar",
+                 cards = { "pr", "threads", "activity" } },
+      global = { hero = "calendar", cards = { "waiting", "streak" } },
     },
     grid = { two_columns = 160, compact = 100, max_width = 220,
-             card_max_lines = 14, hero_max_lines = 10 },
+             card_max_lines = 14, hero_max_lines = 18 },
     keys = { open = "<CR>", browser = "o", refresh = "r", quit = "q" },
     browser = "auto",              -- "open" | "copy" | function(url); auto
                                    -- copies to "+" over SSH (OSC 52-friendly)
@@ -57,7 +60,9 @@ Context is detected once per open and decides the layout:
 Layouts are merged per context; each slot you set replaces the default list.
 Slots: `header` (one section), `hero` (fallback list: the first section that
 is loading or has data wins), `tickers` (one-line strips), `cards` (grid,
-two-up when the window is at least `grid.two_columns` wide).
+two-up when the window is at least `grid.two_columns` wide; a section with
+`wide = true`, like `pr`, always takes a full row).
+The calendar is the hero in every context by default.
 
 ==============================================================================
 3. SECTIONS                                                    *ahoy-sections*
@@ -65,7 +70,8 @@ two-up when the window is at least `grid.two_columns` wide).
 >lua
   {
     name   = "my_prs",
-    title  = "My PRs",                   -- optional, defaults to name
+    title  = "My PRs",                   -- or function(data|nil); default name
+    wide   = false,                      -- true: card never shares a row
     slots  = { "card", "ticker" },       -- optional, defaults to all
     when   = function(ctx) return true end,
     fetch  = function(ctx, done) done(data) end,
@@ -92,7 +98,7 @@ Built-in sections:
             failing CI, approved+mergeable PRs, @mentions
   my_prs    card/ticker: my open PRs with CI x/y, review state, age
   latest    card/ticker: recent activity by others on my PRs
-  pr        hero: this branch's PR — checks x/y, per-reviewer state,
+  pr        hero/card (full row): this branch's PR — checks x/y, per-reviewer state,
             mergeability (and why it's blocked), diffstat, timeline,
             failing checks (`<CR>` = failed log). Without an open PR:
             diffstat vs base, push state, and `git push` / `gh pr create`
@@ -115,13 +121,18 @@ ahoy never merges, pushes or comments.
 
 `ctx.repo` is "owner/name" parsed from the `origin` remote.
 
-Calendar sections (shown only when the URL file exists):
-  next_meeting  hero/ticker: current or next meeting with countdown, call
-                link (`<CR>`), what's after, and a working-day strip
-                (━ elapsed, ▆ meetings, ● now). Empty when nothing is
-                left today, so a hero fallback list moves on.
-  calendar      card "Today": every event today; past dimmed, current
-                marked, declined labelled; "fetched at" + warnings.
+Calendar sections:
+  calendar      hero/card "Today · <date>", the default hero everywhere.
+                As hero: current or next meeting with countdown and call
+                link (`<CR>`), the working-day strip (━ elapsed,
+                ▆ meetings, ● now), then today's agenda (past dimmed and
+                collapsed once the day is long, current ▶, declined
+                labelled). As card: the agenda + "fetched at". Never
+                hidden: without the URL file it shows how to set it up,
+                with no events "No meetings today".
+  next_meeting  hero/ticker (only when the URL file exists): current or
+                next meeting with countdown and what's after. Empty when
+                nothing is left today, so a hero fallback list moves on.
 
 Put your Google Calendar "Secret address in iCal format" in
 `~/.config/ahoy/ics_url` and `chmod 600` it (ahoy warns otherwise). The URL

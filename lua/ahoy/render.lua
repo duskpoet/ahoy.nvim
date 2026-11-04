@@ -100,7 +100,12 @@ M.fit = fit
 
 -- Section bodies ------------------------------------------------------------
 
-local function title_of(spec)
+---`spec.title` may be a string or `function(data|nil) -> string`.
+local function title_of(spec, st)
+  if type(spec.title) == "function" then
+    local ok, t = pcall(spec.title, st and st.status == "ok" and st.data or nil)
+    return ok and type(t) == "string" and t or spec.name
+  end
   return spec.title or spec.name
 end
 
@@ -158,7 +163,7 @@ local function box(spec, st, rows, W, height, hero, spin)
   elseif st.status == "error" then
     title[#title + 1] = { "✗ ", "AhoyError" }
   end
-  title[#title + 1] = { title_of(spec), hero and "AhoyHeroTitle" or "AhoyTitle" }
+  title[#title + 1] = { title_of(spec, st), hero and "AhoyHeroTitle" or "AhoyTitle" }
   title = fit(title, W - 6, true)
   local tw = util.segs_width(title)
 
@@ -240,7 +245,7 @@ function M.draw(buf, win, S, cfg)
     if plan.header then
       local spec, st = secs[plan.header], st_of(plan.header)
       if st.status == "loading" then
-        line({ { segs = { { spin .. " ", "AhoySpinner" }, { title_of(spec), "AhoyDim" } } } })
+        line({ { segs = { { spin .. " ", "AhoySpinner" }, { title_of(spec, st), "AhoyDim" } } } })
         blank()
       elseif st.status ~= "empty" then
         for _, r in ipairs(body(spec, st, "header", cw, 2)) do
@@ -281,7 +286,7 @@ function M.draw(buf, win, S, cfg)
         if st.status == "loading" then
           segs[#segs + 1] = { spin .. " ", "AhoySpinner" }
         end
-        segs[#segs + 1] = { title_of(spec) .. "  ", "AhoyTitle" }
+        segs[#segs + 1] = { title_of(spec, st) .. "  ", "AhoyTitle" }
         local keys
         if st.status ~= "loading" then
           local b = body(spec, st, "ticker", cw - util.segs_width(segs), 1)
@@ -299,12 +304,15 @@ function M.draw(buf, win, S, cfg)
       shown = true
     end
 
-    -- cards
+    -- cards (a `wide = true` section always takes a full row)
     local cards = plan.cards
     local two = ww >= g.two_columns
+    local function wide(n)
+      return secs[n].wide == true
+    end
     local i = 1
     while i <= #cards do
-      if two and cards[i + 1] then
+      if two and cards[i + 1] and not wide(cards[i]) and not wide(cards[i + 1]) then
         local w1 = math.floor((cw - 2) / 2)
         local w2 = cw - 2 - w1
         local a, b = cards[i], cards[i + 1]
