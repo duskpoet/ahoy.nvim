@@ -49,6 +49,7 @@ ahoy.setup({
     { label = "Two actions", cmd = "echo 1", run = function() end },
     { label = "Bad harner", harner = true },
     { label = "Bad key", key = 5, cmd = "echo 1" },
+    { label = "Bad close", cmd = "echo 1", close = "no" },
   },
 })
 
@@ -68,6 +69,7 @@ check("warns: no action", warned("dial #6 %(needs exactly one"))
 check("warns: two actions", warned("dial #7 %(needs exactly one"))
 check("warns: harner type", warned("dial #8 %(harner must be"))
 check("warns: key type", warned("dial #9 %(key must be"))
+check("warns: close type", warned("dial #10 %(close must be"))
 
 -- dashboard
 vim.o.columns = 170
@@ -97,17 +99,29 @@ check("`when` hides on main", t:find("Address PR") == nil)
 vim.ui.input = function(_, cb) cb("  123 ") end
 vim.api.nvim_feedkeys("1", "x", false)
 check("key 1 sends prompt with input", sent[#sent] == "/pr-review 123")
+local function shown()
+  local b = ahoy._state.buf
+  return b ~= nil and vim.api.nvim_buf_is_valid(b) and vim.api.nvim_get_current_buf() == b
+end
+check("running an action closes the dashboard", not shown())
+local function reopen()
+  ahoy.open()
+  vim.wait(3000, settled, 10)
+end
 
 -- empty input: still runs, placeholder removed (harner gets the trimmed prompt)
+reopen()
 vim.ui.input = function(_, cb) cb("") end
 vim.api.nvim_feedkeys("1", "x", false)
 check("empty input", sent[#sent] == "/pr-review")
 
--- cancelled input aborts
+-- cancelled input aborts (and leaves the dashboard open)
+reopen()
 local n = #sent
 vim.ui.input = function(_, cb) cb(nil) end
 vim.api.nvim_feedkeys("1", "x", false)
 check("cancel aborts", #sent == n)
+check("cancel keeps the dashboard open", shown())
 
 -- hidden action's key does nothing
 vim.api.nvim_feedkeys("2", "x", false)
@@ -123,8 +137,10 @@ end
 vim.api.nvim_win_set_cursor(0, { lnum, 6 })
 vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 check("<CR> runs the row action", ran == "none")
+check("<CR> closes the dashboard", not shown())
 
 -- errors from a dial key become notifications, not raw errors
+reopen()
 warnings = {}
 local errors = {}
 vim.notify = function(msg, level)
@@ -137,8 +153,7 @@ check("dial key error is caught", ok and errors[1] and errors[1]:find("kaboom") 
 
 -- pr context shows the `when`-gated action
 fake_ctx = { cwd = vim.fn.getcwd(), kind = "pr" }
-ahoy.refresh()
-vim.wait(3000, settled, 10)
+reopen()
 check("`when` shows on pr", text():find("%[2%] Address PR") ~= nil)
 vim.api.nvim_feedkeys("2", "x", false)
 check("key 2 sends skill", sent[#sent] == "/address-pr")
@@ -160,6 +175,7 @@ ahoy.setup({
     { key = "5", label = "Pr five", run = function() hit = "pr" end, when = function(c) return c.kind == "pr" end },
     { key = "6", label = "Six A", run = function() hit = "6a" end },
     { key = "6", label = "Six B", run = function() hit = "6b" end },
+    { key = "8", label = "Stay", run = function() hit = "stay" end, close = false },
   },
 })
 check("warns: shadowed unconditional key", warned('dial key "6" already used') and not warned('dial key "5"'))
@@ -173,8 +189,12 @@ check("context-split key labelled", t:find("%[5%] Pr five") ~= nil and t:find("M
 check("duplicate shows key once", t:find("%[6%] Six A") ~= nil and t:find("%[6%] Six B") == nil and t:find("Six B") ~= nil)
 vim.api.nvim_feedkeys("5", "x", false)
 check("context-split key runs the visible one", hit == "pr")
+reopen()
 vim.api.nvim_feedkeys("6", "x", false)
 check("duplicate key runs the labelled one", hit == "6a")
+reopen()
+vim.api.nvim_feedkeys("8", "x", false)
+check("close = false runs and keeps the dashboard open", hit == "stay" and shown())
 
 -- dial section disabled: its keys aren't mapped
 ahoy.setup({
@@ -191,8 +211,8 @@ check("disabled dial maps no keys", vim.fn.maparg("7", "n", false, true).buffer 
 -- nothing configured: the dial is dropped from the layout
 ahoy.setup({ show_on_startup = false, layouts = { main = only_dial } })
 fake_ctx = { cwd = vim.fn.getcwd(), kind = "main" }
-ahoy.refresh()
-vim.wait(3000, settled, 10)
+ahoy.close()
+reopen()
 check("empty dial hidden", text():find("Quick dial") == nil)
 end
 

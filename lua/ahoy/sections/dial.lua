@@ -47,6 +47,10 @@ local function subst(s, input)
 end
 
 local function exec(a, ctx, input)
+  -- Leave the dashboard first so the action lands in the user's previous buffer/window.
+  if a.close ~= false then
+    require("ahoy").close()
+  end
   if a.run then
     return a.run(ctx, input)
   elseif a.cmd then
@@ -70,6 +74,7 @@ local function safe_exec(a, ctx, input)
 end
 
 ---Run action `a`, asking for `a.input` first when set (cancel aborts; empty input is passed as "").
+---The dashboard is closed just before the action runs (not on cancel, nor with `close = false`).
 ---Errors are reported as notifications whichever way it was triggered (row <CR> or dial key).
 function M.run(a, ctx)
   if not a.input then

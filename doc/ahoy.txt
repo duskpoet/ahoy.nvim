@@ -77,6 +77,7 @@ The `dial` section ("Quick dial") lists your own actions. It is hidden while
       desc   = "pr-review",              -- dim right-hand text (optional)
       when   = function(ctx) return ctx.kind ~= "global" end,  -- optional
       input  = "PR (empty = current): ", -- ask first; {input} = the answer
+      close  = false,                    -- keep the dashboard open (default true)
       -- exactly one of:
       harner = "/pr-review {input}",     -- string or fn(ctx, input) -> prompt
       -- run = function(ctx, input) end,
@@ -84,8 +85,9 @@ The `dial` section ("Quick dial") lists your own actions. It is hidden while
     },
   }
 <
-`<CR>` on the row or the action's `key` runs it. Cancelling the `input`
-prompt aborts. `harner` sends the prompt to the duskpoet/harner chat, so
+`<CR>` on the row or the action's `key` runs it. Running an action closes the
+dashboard first (returning to the previous buffer) unless `close = false`;
+cancelling the `input` prompt aborts and keeps it open. `harner` sends the prompt to the duskpoet/harner chat, so
 `/skill args` invokes a Claude skill. Keys that clash with `keys` are
 dropped. A key may be reused when `when` keeps the actions apart (e.g. `2`
 on `pr` and on `main`); if several visible actions share a key, the first

@@ -270,7 +270,7 @@ end
 
 ---Leave the dashboard, returning to the previous buffer.
 function M.close()
-  if not valid() then
+  if not valid() or vim.api.nvim_win_get_buf(0) ~= S.buf then
     return
   end
   local prev = S.prev

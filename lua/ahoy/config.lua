@@ -12,7 +12,7 @@ M.defaults = {
   ---User sections: a list of specs or a map of name -> spec. `name = false` disables a built-in.
   sections = {},
   ---Quick dial actions (the `dial` section; hidden while empty). Each:
-  ---  { key = "1", label = "…", desc = "…", when = fn(ctx), input = "Prompt: ",
+  ---  { key = "1", label = "…", desc = "…", when = fn(ctx), input = "Prompt: ", close = false,
   ---    run = fn(ctx, input) | cmd = "Ex {input}" | harner = "/skill {input}" | fn(ctx, input) }
   dial = {},
   ---The calendar is the hero everywhere; it never goes empty (setup hint / "no meetings today").
@@ -73,6 +73,8 @@ local function valid_dial(a)
     return "key must be a non-empty string"
   elseif a.when ~= nil and type(a.when) ~= "function" then
     return "when must be a function"
+  elseif a.close ~= nil and type(a.close) ~= "boolean" then
+    return "close must be a boolean"
   end
 end
 
