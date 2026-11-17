@@ -3,10 +3,27 @@
 ==============================================================================
 CONTENTS                                                       *ahoy-contents*
 
+  0. Requirements and install ............................ |ahoy-install|
   1. Usage ............................................... |ahoy-usage|
   2. Configuration ....................................... |ahoy-config|
   3. Sections ............................................ |ahoy-sections|
   4. Highlights .......................................... |ahoy-highlights|
+
+==============================================================================
+0. REQUIREMENTS AND INSTALL                                     *ahoy-install*
+
+Neovim 0.10 or newer and `git`. The GitHub sections need the `gh` CLI, logged
+in (`gh auth login`); the calendar needs `curl`. Optional: vim-fugitive (diff
+after checking out a review request) and duskpoet/harner.nvim (quick dial
+`harner` actions). A section whose tool is missing shows an error in its own
+box; the rest keeps working.
+
+With lazy.nvim: >lua
+  { "duskpoet/ahoy.nvim", lazy = false, opts = { keymap = "<leader>a" } }
+<
+Otherwise install the plugin and call `require("ahoy").setup({ ... })`.
+`:Ahoy` works without setup(); setup() enables the startup screen, the
+mapping and your options. The README has a step-by-step tutorial.
 
 ==============================================================================
 1. USAGE                                                          *ahoy-usage*
@@ -35,8 +52,7 @@ Context is detected once per open and decides the layout:
 >lua
   require("ahoy").setup({
     show_on_startup = true,
-    keymap = "<leader>a",          -- open/refresh mapping, nil for none
-    idle = true,                   -- false disables the idle pool
+    keymap = nil,                  -- open/refresh mapping, e.g. "<leader>a"
     sections = { ... },            -- see |ahoy-sections|
     dial = { ... },                -- quick dial actions, see |ahoy-dial|
     layouts = {
@@ -44,7 +60,7 @@ Context is detected once per open and decides the layout:
                  cards = { "dial", "waiting", "my_prs", "latest" } },
       pr     = { header = "status", hero = "calendar",
                  cards = { "dial", "pr", "threads", "activity" } },
-      global = { hero = "calendar", cards = { "dial", "waiting", "streak" } },
+      global = { hero = "calendar", cards = { "dial", "waiting" } },
     },
     grid = { two_columns = 160, compact = 100, max_width = 220,
              card_max_lines = 14, hero_max_lines = 18 },
@@ -58,6 +74,9 @@ Context is detected once per open and decides the layout:
                max_reviews = 5, hide_bots = true },
   })
 <
+These are the defaults. `idle` is also accepted but reserved for a planned
+feature and has no effect yet.
+
 Layouts are merged per context; each slot you set replaces the default list.
 Slots: `header` (one section), `hero` (fallback list: the first section that
 is loading or has data wins), `tickers` (one-line strips), `cards` (grid,
@@ -87,7 +106,8 @@ The `dial` section ("Quick dial") lists your own actions. It is hidden while
 <
 `<CR>` on the row or the action's `key` runs it. Running an action closes the
 dashboard first (returning to the previous buffer) unless `close = false`;
-cancelling the `input` prompt aborts and keeps it open. `harner` sends the prompt to the duskpoet/harner chat, so
+cancelling the `input` prompt aborts and keeps it open. `harner` sends the
+prompt to the duskpoet/harner.nvim chat (which must be installed), so
 `/skill args` invokes a Claude skill. Keys that clash with `keys` are
 dropped. A key may be reused when `when` keeps the actions apart (e.g. `2`
 on `pr` and on `main`); if several visible actions share a key, the first

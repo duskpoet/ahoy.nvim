@@ -111,6 +111,7 @@ check("shortstat", select(3, require("ahoy.sections.pr")._parse_shortstat(" 8 fi
 -- dashboard (PR exists) -------------------------------------------------------
 local root = vim.fn.tempname()
 vim.fn.mkdir(root .. "/src", "p")
+root = vim.uv.fs_realpath(root) -- macOS: /var is a symlink, buffer names are resolved
 vim.fn.writefile({ "one", "two", "three" }, root .. "/src/a.lua")
 
 local fake_ctx

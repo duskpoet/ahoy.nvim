@@ -7,7 +7,7 @@ M.defaults = {
   show_on_startup = true,
   ---Normal-mode mapping that opens/refreshes the dashboard, e.g. "<leader>a". nil = none.
   keymap = nil,
-  ---false disables the idle pool entirely.
+  ---Reserved for the planned idle pool (see DESIGN.md); has no effect yet.
   idle = true,
   ---User sections: a list of specs or a map of name -> spec. `name = false` disables a built-in.
   sections = {},
@@ -20,7 +20,7 @@ M.defaults = {
   layouts = {
     main = { header = "status", hero = "calendar", cards = { "dial", "waiting", "my_prs", "latest" } },
     pr = { header = "status", hero = "calendar", cards = { "dial", "pr", "threads", "activity" } },
-    global = { hero = "calendar", cards = { "dial", "waiting", "streak" } },
+    global = { hero = "calendar", cards = { "dial", "waiting" } },
   },
   grid = {
     two_columns = 160, -- window width at which cards go two-up

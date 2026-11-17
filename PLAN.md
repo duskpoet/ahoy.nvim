@@ -1,7 +1,7 @@
 # ahoy.nvim — build plan
 
-See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usable and wired into
-`~/.config/nvim/lua/plugins.lua` via `{ dir = "~/ahoy.nvim", opts = {...} }`.
+See DESIGN.md for decisions. Built in thin vertical slices; each slice ends usable.
+Slices 1–4 and the quick dial are done; slice 5 is the open roadmap.
 
 ## Slice 1 — Core
 - [x] Plugin layout: `lua/ahoy/{init,config,context,layout,render,section,util}.lua`, `plugin/ahoy.lua`, `doc/ahoy.txt`
@@ -43,7 +43,11 @@ See DESIGN.md for decisions. Build in thin vertical slices; each slice ends usab
 - [x] Fixture from a sanitized copy of the real feed — local only (gitignored); expansion matches `recurring-ical-events` exactly (146/146 live over 121 days, 73/73 fixture)
 - [x] `next_meeting` (hero + ticker), `calendar` card; countdown + day progress via 1-min timer; Meet link on `<CR>`; "fetched at"
 
-## Slice 5 — Idle pool & fun
+## Quick dial
+- [x] `dial` section: user actions (`run` / `cmd` / `harner`) with keys, `when`, `input`, `close`
+- [x] Tests (`tests/dial.lua`)
+
+## Slice 5 — Idle pool & fun (not started)
 - [ ] State file `stdpath("data")/ahoy/state.json` (last inbox zero, rotation history)
 - [ ] Rotation: context-aware first (no meetings, inbox zero, Friday ≥16:00, ≥22:00), then weighted random without repeats
 - [ ] Streak heatmap via `contributionsCollection`

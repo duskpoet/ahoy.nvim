@@ -13,7 +13,7 @@ local function keys()
 end
 M.keys = keys
 
----Send `prompt` to the harner chat (duskpoet/harner); a "/skill args" prompt invokes a skill.
+---Send `prompt` to the harner chat (duskpoet/harner.nvim); a "/skill args" prompt invokes a skill.
 function M.harner(prompt)
   local ok, h = pcall(require, "harner")
   if not ok or type(h.ask) ~= "function" then

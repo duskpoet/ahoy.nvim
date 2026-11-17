@@ -2,6 +2,9 @@
 
 A context-aware, extensible startup dashboard built around a GitHub + calendar workflow.
 
+This is the design record. Everything here is built except the parts marked *planned*:
+the idle pool, the streak section and the state file. For usage see README.md and `:help ahoy`.
+
 ## Opening
 - Shows on startup (`show_on_startup = true`, configurable) when nvim starts with no file args.
 - Hotkey/command (`:Ahoy`) opens it in the current window; if already open → refresh.
@@ -39,13 +42,13 @@ Defined by the user in `setup({ sections = {...} })`. No public registry yet (ke
 - `hero`   — full-width card. The calendar is the hero in every context: it's the main part of ahoy and is always visible (setup hint when unconfigured, "No meetings today" when empty). Accepts a fallback list: first section with data wins.
 - `card`   — grid cards; ≥160 cols → 2 columns, <100 → single column; reflow on `VimResized`. `wide = true` sections (the PR) take a full row.
 - `ticker` — one-line strips
-- `idle`   — fills only otherwise-empty slots; never displaces real info
+- `idle`   — *planned*: fills only otherwise-empty slots; never displaces real info
 
 ```lua
 layouts = {
-  main   = { header = "status", hero = "calendar", cards = { "waiting", "my_prs", "latest" } },
-  pr     = { header = "status", hero = "calendar", cards = { "pr", "threads", "activity" } },
-  global = { hero = "calendar", cards = { "waiting", "streak" } },
+  main   = { header = "status", hero = "calendar", cards = { "dial", "waiting", "my_prs", "latest" } },
+  pr     = { header = "status", hero = "calendar", cards = { "dial", "pr", "threads", "activity" } },
+  global = { hero = "calendar", cards = { "dial", "waiting" } },  -- + "streak" once it exists
 }
 ```
 
@@ -57,17 +60,17 @@ layouts = {
 - `gh api graphql` — one query for the main view where possible.
 - PR branch view: checks, review state per reviewer, mergeability, diffstat, timeline, unresolved threads, activity.
 - **Waiting on me**: review requests · unresolved review comments on my PRs · my approved+mergeable PRs · my PRs with failing CI · @mentions.
-- **Streak**: `contributionsCollection` → 4-week heatmap + current/best streak + this-week count.
+- **Streak** (*planned*): `contributionsCollection` → 4-week heatmap + current/best streak + this-week count.
 
 ## Calendar (Google, private ICS feed)
 - URL read from `~/.config/ahoy/ics_url` (chmod 600). Never in `setup()`.
 - Fetched with `curl`, parsed in Lua.
-- Recurrence subset: `FREQ=DAILY/WEEKLY/MONTHLY`, `INTERVAL`, `BYDAY`, `UNTIL`, `COUNT`, `EXDATE`, `RECURRENCE-ID` overrides, `TZID`. Unsupported rules flagged with ⚠.
+- Recurrence subset: `FREQ=DAILY/WEEKLY/MONTHLY/YEARLY`, `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYMONTH`, `WKST`, `UNTIL`, `COUNT`, `EXDATE`, `RDATE`, `RECURRENCE-ID` overrides, `TZID`. Unsupported rules flagged with ⚠.
 - Expansion window: today only.
 - Shows: one hero box — current/next meeting with countdown, day strip, today's agenda; `<CR>` opens Meet link (from DESCRIPTION/LOCATION).
 - Header shows "fetched at" (Google feed can lag).
 
-## Idle pool (rotating, context-aware first)
+## Idle pool (*planned*; rotating, context-aware first)
 - No meetings left → deep-work message with free time remaining
 - Inbox zero → celebration + "last time: N days ago"
 - Roast oldest open PR
@@ -79,7 +82,7 @@ layouts = {
 - CI weather (☀ / ⛅ / ⛈)
 - `idle = false` disables all.
 
-## State
+## State (*planned*)
 `stdpath("data")/ahoy/state.json` — small facts only (last inbox zero, idle rotation history to avoid repeats).
 
 ## Actions (`<CR>` per row type; `o` always opens in browser)
