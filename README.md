@@ -1,5 +1,9 @@
 # ahoy.nvim
 
+[![test](https://github.com/duskpoet/ahoy.nvim/actions/workflows/test.yml/badge.svg)](https://github.com/duskpoet/ahoy.nvim/actions/workflows/test.yml)
+![Neovim 0.10+](https://img.shields.io/badge/Neovim-0.10%2B-57A143?logo=neovim&logoColor=white)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 A startup dashboard for Neovim that knows where you are. It shows today's
 meetings, and the GitHub work that fits the directory and branch you opened
 Neovim in:
@@ -412,7 +416,7 @@ The tests are headless Neovim scripts with stubbed `gh` and `curl`; they need
 no network and no GitHub login.
 
 ```sh
-make test
+make test                     # NVIM_BIN=/path/to/nvim to pick a binary
 # or one file:
 nvim --headless -u NONE -i NONE -c 'luafile tests/calendar.lua'
 ```
