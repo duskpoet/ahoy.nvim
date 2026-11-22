@@ -4,6 +4,8 @@
 ![Neovim 0.10+](https://img.shields.io/badge/Neovim-0.10%2B-57A143?logo=neovim&logoColor=white)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
+https://github.com/user-attachments/assets/431b4503-b007-45f7-ad4e-15073e6a29f1
+
 A startup dashboard for Neovim that knows where you are. It shows today's
 meetings, and the GitHub work that fits the directory and branch you opened
 Neovim in:
