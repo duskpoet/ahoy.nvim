@@ -121,6 +121,27 @@ end
 vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 check("<CR> row action", acted)
 
+-- <CR> in the left margin still reaches the row
+acted = false
+vim.api.nvim_win_set_cursor(0, { vim.api.nvim_win_get_cursor(0)[1], 0 })
+vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
+check("<CR> from the margin", acted)
+
+-- region choice with side-by-side cards: under the cursor, else the nearest
+local pick = ahoy._pick
+local L_, R_, X_ = { ["<CR>"] = "L" }, { ["<CR>"] = "R" }, { ["o"] = "X" }
+local regs = { { 4, 80, L_ }, { 86, 160, R_ } }
+check("pick: inside left", pick(regs, 10, "<CR>") == "L")
+check("pick: inside right", pick(regs, 100, "<CR>") == "R")
+check("pick: left margin → left card", pick(regs, 0, "<CR>") == "L")
+check("pick: right margin → right card", pick(regs, 165, "<CR>") == "R")
+check("pick: gutter near left", pick(regs, 81, "<CR>") == "L")
+check("pick: gutter near right", pick(regs, 85, "<CR>") == "R")
+check("pick: gutter midway → left", pick({ { 4, 80, L_ }, { 82, 160, R_ } }, 80, "<CR>") == "L")
+check("pick: skips regions without the key", pick({ { 0, 10, X_ }, { 20, 30, L_ } }, 5, "<CR>") == "L")
+check("pick: nothing bound", pick({ { 0, 10, X_ } }, 5, "<CR>") == nil)
+check("pick: overlapping, later wins", pick({ { 0, 50, L_ }, { 10, 20, R_ } }, 15, "<CR>") == "R")
+
 -- reflow
 vim.o.columns = 90
 vim.cmd("doautocmd VimResized")

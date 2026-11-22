@@ -54,24 +54,27 @@ local function builtin(key)
   end
 end
 
+---The handler for `key` among a line's regions `{ start_col, end_col, keys }` at byte column `col`:
+---the region under the cursor, else the nearest one that binds `key` (margins, gutters between
+---side-by-side cards). On a tie (cursor exactly midway in a gutter) the left one wins.
+local function pick(regs, col, key)
+  local best, best_d
+  for _, r in ipairs(regs) do
+    if r[3][key] then
+      local d = col < r[1] and r[1] - col or col >= r[2] and col - r[2] + 1 or 0
+      if not best_d or d < best_d or (d == best_d and d == 0) then
+        best, best_d = r[3][key], d
+      end
+    end
+  end
+  return best
+end
+M._pick = pick
+
 ---Run the action for `key` on the row under the cursor, else the built-in for that key.
 local function dispatch(key)
   local cur = vim.api.nvim_win_get_cursor(0)
-  local regs = S.regions[cur[1]] or {}
-  local fn
-  for _, r in ipairs(regs) do
-    if r[3][key] and cur[2] >= r[1] and cur[2] < r[2] then
-      fn = r[3][key]
-    end
-  end
-  if not fn then
-    local cands = vim.tbl_filter(function(r)
-      return r[3][key] ~= nil
-    end, regs)
-    if #cands == 1 then
-      fn = cands[1][3][key]
-    end
-  end
+  local fn = pick(S.regions[cur[1]] or {}, cur[2], key)
   if fn then
     local ok, err = pcall(fn, S.ctx)
     if not ok then

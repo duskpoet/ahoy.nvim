@@ -29,7 +29,7 @@ Enter
 Sleep 3.5s
 
 # 2. Review request → <CR>: gh pr checkout + fugitive difftool.
-Type@250ms "}}jjw"
+Type@250ms "}}jj"
 Sleep 900ms
 Enter
 Sleep 3s
@@ -51,7 +51,7 @@ Type "q"
 Sleep 800ms
 
 # 5. <CR> on an unresolved thread: jump to file:line.
-Type@250ms "}jjw"
+Type@250ms "}jj"
 Sleep 700ms
 Enter
 Sleep 2.5s
